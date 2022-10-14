@@ -1,0 +1,46 @@
+import telebot
+import time
+PassCode = 'hello'
+Token = '5401128449:AAHQhtCWe10yG6KIcA2fjrvSRF8ZvErSmAI'
+#Hosts = open('F:\MyHome\Hosts.txt','w')
+Home = telebot.TeleBot(Token)
+
+@Home.message_handler(commands=['clear'])
+def StartCommand(message):
+    Hosts = open('F:\MyHome\Hosts.txt', 'w')
+
+@Home.message_handler(commands=['start'])
+def StartCommand(message):
+    Home.reply_to(message,'Welcome home! Enter pascode please...')
+    @Home.message_handler(func=lambda m: True)
+    def IDCheck(message):
+        UserInput = message.text
+        UserID = message.chat.id
+        print(UserInput)
+        print(UserID)
+
+        if str(UserInput) == str(PassCode):
+            Hosts = open('F:\MyHome\Hosts.txt', 'a')
+            Hosts.writelines(str(UserID))
+            Hosts.writelines(' ')
+
+            HostList = []
+            Hosts = open('F:\MyHome\Hosts.txt', 'r')
+            HostList.append(Hosts.read())
+            print(HostList)
+            for i in HostList:
+                HostList2 = HostList[0].split(' ')
+                print(HostList2)
+                if str(UserID) in HostList2:
+                    print('He is a user!')
+                    Home.reply_to(message,"You are a user!")
+                else:
+                    print('New user!')
+                    Home.reply_to(message,'You are a new user!')
+        elif str(UserInput) != str(PassCode):
+            print("Wrong passcode!")
+            Home.reply_to(message,'Wrong passcode, try again!')
+
+
+while True:
+    Home.polling()
