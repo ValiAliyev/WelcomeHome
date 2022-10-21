@@ -1,5 +1,9 @@
 import telebot
+import pyfirmata
+from pyfirmata import util
 import time
+
+Controler = pyfirmata.ArduinoMega('COM4')
 PassCode = 'hello'
 Token = '5401128449:AAHQhtCWe10yG6KIcA2fjrvSRF8ZvErSmAI'
 #Hosts = open('F:\MyHome\Hosts.txt','w')
@@ -8,6 +12,32 @@ Home = telebot.TeleBot(Token)
 @Home.message_handler(commands=['clear'])
 def StartCommand(message):
     Hosts = open('F:\MyHome\Hosts.txt', 'w')
+
+@Home.message_handler(commands=['LightsOn'])
+def LightsOn(message):
+    Controler.digital[13].write(1)
+    print('Turned on!')
+
+@Home.message_handler(commands=['LightsOff'])
+def LightsOff(message):
+    Controler.digital[13].write(0)
+    print('Turned off!')
+
+@Home.message_handler(commands=['GasRead'])
+def GasRead(message):
+    print('Arduino qosuldu!')
+    reader = pyfirmata.util.Iterator(Controler)
+    reader.start()
+    sensor = Controler.analog[0]
+    sensor.enable_reporting()
+    while True:
+        data = str(sensor.read())
+        if data != 'None':
+            print(sensor.read())
+            Home.reply_to(message,"Havadaki qaz miqdarı: {}".format(data))
+            break
+
+    print('Gas Value Sent!')
 
 @Home.message_handler(commands=['start'])
 def StartCommand(message):
@@ -33,7 +63,7 @@ def StartCommand(message):
                 print(HostList2)
                 if str(UserID) in HostList2:
                     print('He is a user!')
-                    Home.reply_to(message,"You are a user!")
+                    Home.reply_to(message,"You are a user! \n Here is the menu: \n /LightsOn \n /LightsOff \n /GasRead")
                 else:
                     print('New user!')
                     Home.reply_to(message,'You are a new user!')
