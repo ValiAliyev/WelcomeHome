@@ -7,21 +7,105 @@ Controler = pyfirmata.ArduinoMega('COM4')
 PassCode = 'hello'
 Token = '5401128449:AAHQhtCWe10yG6KIcA2fjrvSRF8ZvErSmAI'
 Home = telebot.TeleBot(Token)
+MyGuide = open('F:\MyHome\MyGuide.png','rb')
 
 #Pinlerin Teyini
-DoorPin = Controler.digital[10]
+DoorOpenPin = Controler.digital[10]
+DoorClosePin = Controler.digital[9]
 LightsPin = Controler.digital[13]
 GasSensPin = Controler.analog[0]
+DoorCheckPin = Controler.digital[11]
+WindowCheckPin = Controler.digital[12]
+
+
+@Home.message_handler(commands=['Menu'])
+def Menu(message):
+    Home.reply_to(message,"Əmrlər menüsu: \n /Menu \n /Info \n /Guide \n /LightsOn \n /LightsOff \n /OpenDoor \n /CloseDoor \n /GasRead \n /DoorCheck  \n /WindowCheck")
+
+
+@Home.message_handler(commands=['WindowCheck'])
+def WindowCheck(message):
+    print('Qapı yoxlaması...')
+    reader = pyfirmata.util.Iterator(Controler)
+    reader.start()
+    sensor = WindowCheckPin
+    sensor.mode = pyfirmata.INPUT
+    sensor.enable_reporting()
+    while True:
+        data = str(sensor.read())
+        if data != 'None':
+            print(sensor.read())
+            if sensor.read() == True:
+                Home.reply_to(message,"Pəncərə bağlıdır!")
+            elif sensor.read() == False:
+                Home.reply_to(message, "Pəncərə açıqdır!")
+            print('Melumat gonderildi!')
+            break
+
+
+
+@Home.message_handler(commands=['DoorCheck'])
+def DoorCheck(message):
+    print('Qapı yoxlaması...')
+    reader = pyfirmata.util.Iterator(Controler)
+    reader.start()
+    sensor = DoorCheckPin
+    sensor.mode = pyfirmata.INPUT
+    sensor.enable_reporting()
+    while True:
+        data = str(sensor.read())
+        if data != 'None':
+            print(sensor.read())
+            if sensor.read() == True:
+                Home.reply_to(message,"Qapı bağlıdır!")
+            elif sensor.read() == False:
+                Home.reply_to(message, "Qapı açıqdır!")
+            print('Melumat gonderildi!')
+            break
+
+
+
+@Home.message_handler(commands=['OpenDoor'])
+def OpenDoor(message):
+    DoorOpenPin.write(1)
+    time.sleep(2)
+    DoorOpenPin.write(0)
+    print('Qapı açıldı!')
+    Home.reply_to(message, "Qapı açıldı!")
+
+@Home.message_handler(commands=['CloseDoor'])
+def CloseDoor(message):
+    DoorClosePin.write(1)
+    time.sleep(2)
+    DoorClosePin.write(0)
+    print('Qapı Bağlandı')
+    Home.reply_to(message, "Qapı bağlandı!")
+
+
+@Home.message_handler(commands=['Info'])
+def Info(message):
+    Home.reply_to(message, 'Layihə haqqında ətraflı məlumat:\nhttps://cutt.ly/tNgo1gL')
+
+
+@Home.message_handler(commands=['Guide'])
+def Guide(message):
+    User = int(message.chat.id)
+    Home.reply_to(message, 'Sizə istifadəçi təlimatını göndəririk...')
+    Home.send_photo(message.chat.id,MyGuide)
+
+
 
 @Home.message_handler(commands=['LightsOn'])
 def LightsOn(message):
     LightsPin.write(1)
     print('Isiq yandi!')
+    Home.reply_to(message,'Isiq yandi!')
 
 @Home.message_handler(commands=['LightsOff'])
 def LightsOff(message):
     LightsPin.write(0)
     print('Isiqlar sondu!')
+    Home.reply_to(message,'Isiq sondu!')
 
 @Home.message_handler(commands=['GasRead'])
 def GasRead(message):
@@ -74,7 +158,7 @@ def StartCommand(messaj):
                 if str(UserID) in HostList2:
                     print('Yeni sahibin qeydiyyati tamamlandi!')
                     Home.reply_to(messaj,
-                                  "Ev sahibinin tanınması başa çatdı! \n Əmrlər menüsu: \n /Info \n /UserGuide \n /LightsOn \n /LightsOff \n /OpenDoor \n /CloseDoor \n /GasRead \n /DoorCheck  \n /WindowCheck")
+                                  "Ev sahibinin tanınması başa çatdı! \n Əmrlər menüsu: \n /Menu \n /Info \n /Guide \n /LightsOn \n /LightsOff \n /OpenDoor \n /CloseDoor \n /GasRead \n /DoorCheck  \n /WindowCheck")
                 else:
                     print('New user!')
                     Home.reply_to(messaj, 'You are a new user!')
@@ -105,10 +189,10 @@ def StartCommand(message):
             if str(UserID) in HostList2:
                 print('Yeni sahibin taninmasi basa catdi!')
                 Home.reply_to(message,
-                              "Ev sahibinin tanınması başa çatdı! \n Əmrlər menüsu: \n /Info \n /UserGuide \n /LightsOn \n /LightsOff \n /OpenDoor \n /CloseDoor \n /GasRead \n /DoorCheck  \n /WindowCheck")
+                              "Ev sahibinin tanınması başa çatdı! \n Əmrlər menüsu: \n/Menu \n /Info \n /Guide \n /LightsOn \n /LightsOff \n /OpenDoor \n /CloseDoor \n /GasRead \n /DoorCheck  \n /WindowCheck")
             elif str(UserID) not in HostList2:
                 Home.reply_to(message,
-                              'Siz ev sahibi deyilsiniz! \nQeydiyyatdan keçmək üçün /register əmrindən istifadə edin.')
+                              'Siz ev sahibi deyilsiniz! \nQeydiyyatdan keçmək üçün /Register əmrindən istifadə edin.')
 
 
 while True:
